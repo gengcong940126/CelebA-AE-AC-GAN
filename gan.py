@@ -1,7 +1,7 @@
 """
 
-
 # PARAMETERS:
+  * IMG_SHP        - shape of image in pixels and channels
   * CLS_SHP        - number of classes to predict
   * LNV_SHP        - length of latent noise vector
 
@@ -31,10 +31,10 @@ from tensorflow.keras.utils import plot_model
 
 class AEACGAN():
 
-    def __init__(self, IMG_SHP=(28, 28, 1), CLS_SHP=10, LNV_SHP=100, depth=64):
+    def __init__(self, IMG_SHP=(64, 64, 3), CLS_SHP=40, LNV_SHP=100, depth=64):
 
         ##### IMAGE SHAPE
-        self.IMG_SHP = (28, 28, 1)
+        self.IMG_SHP = IMG_SHP
 
         ##### NUMBER OF CLASSES TO PREDICT
         self.CLS_SHP = CLS_SHP
@@ -46,7 +46,7 @@ class AEACGAN():
         self.depth = depth
 
         ##### KERNEL INIT
-        self.init = RandomNormal(stddev=0.02)
+        self.init = RandomNormal(stddev=0.01)
 
     def  __repr__(self):
         ...
@@ -68,13 +68,16 @@ class AEACGAN():
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         net = Dropout(0.4)(net)
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        #net = BatchNormalization()(net)
+        net = LeakyReLU()(net)
+        net = Dropout(0.4)(net)
+
+        ##### CONV2D LAYER WITH STRIDE 2
+        net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
         net = Dropout(0.4)(net)
 
@@ -83,12 +86,11 @@ class AEACGAN():
 
         ##### DENSE LAYER
         net = Dense(self.depth)(net)
-        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         net = Dropout(0.4)(net)
 
         ##### OUTPUT1: ONE-HOT-VECTOR OF CLASS
-        y_out = Dense(self.CLS_SHP, activation='softmax')(net)
+        y_out = Dense(self.CLS_SHP, activation='tanh')(net)
 
         ##### OUTPUT2: LATENT NOISE PREDICTION
         z_out = Dense(self.LNV_SHP, activation='sigmoid')(net)
@@ -116,28 +118,30 @@ class AEACGAN():
         net = concatenate([y_in, z_in], axis=-1)
 
         ##### DENSE LAYER
-        net = Dense(7*7*self.depth)(net)
-        #net = BatchNormalization()(net)
+        net = Dense(8*8*self.depth)(net)
         net = LeakyReLU()(net)
         net = Dropout(0.4)(net)
 
         ##### TO CONV2D
-        net = Reshape((7, 7, self.depth))(net)
+        net = Reshape((8, 8, self.depth))(net)
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
         net = Conv2DTranspose(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         net = Dropout(0.4)(net)
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
         net = Conv2DTranspose(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        #net = BatchNormalization()(net)
+        net = LeakyReLU()(net)
+        net = Dropout(0.4)(net)
+
+        ##### CONV2D TRANSPOSE WITH STRIDE 2
+        net = Conv2DTranspose(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
         net = Dropout(0.4)(net)
 
         ##### OUTPUT IMAGE
-        X_out = Conv2D(1, (7, 7), activation='tanh', padding='same', kernel_initializer=self.init)(net)
+        X_out = Conv2D(3, (8, 8), activation='tanh', padding='same', kernel_initializer=self.init)(net)
 
         ##### BUILD AND RETURN MODEL
         model = Model(inputs = [y_in, z_in], outputs = X_out)
@@ -160,13 +164,16 @@ class AEACGAN():
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         net = Dropout(0.4)(net)
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        #net = BatchNormalization()(net)
+        net = LeakyReLU()(net)
+        net = Dropout(0.4)(net)
+
+        ##### CONV2D LAYER WITH STRIDE 2
+        net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
         net = Dropout(0.4)(net)
 
@@ -175,7 +182,6 @@ class AEACGAN():
 
         ##### DENSE LAYER
         net = Dense(self.depth)(net)
-        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         net = Dropout(0.4)(net)
 
@@ -183,11 +189,11 @@ class AEACGAN():
         w_out = Dense(1, activation='sigmoid')(net)
 
         ##### OUTPUT2: ONE-HOT-VECTOR OF CLASS
-        y_out = Dense(self.CLS_SHP, activation='softmax')(net)
+        y_out = Dense(self.CLS_SHP, activation='tanh')(net)
 
         ##### BUILD, COMPILE AND RETURN MODEL
         model = Model(inputs = X_in, outputs = [w_out, y_out])
-        model.compile(loss=['binary_crossentropy', 'categorical_crossentropy'], optimizer=Adam(lr=0.0002, beta_1=0.5))
+        model.compile(loss=['binary_crossentropy', 'hinge'], optimizer=Adam(lr=0.0002, beta_1=0.5))
         return model
 
     def build_autoencoder(self, e_model, g_model):
@@ -241,5 +247,5 @@ class AEACGAN():
 
         ##### BUILD, COMPILE AND RETURN MODEL
         model = Model(inputs = [y_in, z_in], outputs = [w_out, y_out])
-        model.compile(loss=['binary_crossentropy', 'categorical_crossentropy'], optimizer=Adam(lr=0.0002, beta_1=0.5))
+        model.compile(loss=['binary_crossentropy', 'hinge'], optimizer=Adam(lr=0.0002, beta_1=0.5))
         return model

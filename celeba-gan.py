@@ -17,11 +17,11 @@ import matplotlib.pyplot as mp
 # %% CONSTANTS
 ################################################################################
 
-DATASET = 'mnist'
-IMG_SHP = (28, 28, 1)
-CLS_SHP = 10
+DATASET = 'celeba'
+IMG_SHP = (64, 64, 3)
+CLS_SHP = 40
 LNV_SHP = 100
-EPOCHS = 100
+EPOCHS = 3
 BATCH_SIZE = 128
 
 ################################################################################
@@ -73,13 +73,14 @@ for epoch in range(EPOCHS):
         ############################################################################
 
         ##### GET NEXT BATCH FROM REAL IMAGE GENERATOR
-        X_real, y_real, w_real = next(real_gen)
+        X_real, y_real = next(real_gen)
+        w_real = 0.9*np.ones((len(y_real),1))
 
         ##### GENERATE RANDOM DIGITS
         idx = np.random.randint(0, high=CLS_SHP, size=BATCH_SIZE, dtype='int')
 
         ##### ONE-HOT-ENCODE NUMBERS
-        y_fake = np.zeros((BATCH_SIZE, CLS_SHP), dtype=float)
+        y_fake = -np.ones((BATCH_SIZE, CLS_SHP), dtype=float)
         y_fake[np.arange(BATCH_SIZE), idx] = 1
 
         ##### GENERATE LATENT NOISE VECTOR
@@ -113,7 +114,7 @@ for epoch in range(EPOCHS):
 
         loss.append([d1_loss, d2_loss, d3_loss, g1_loss, g2_loss, g3_loss, e1_loss])
 
-        if batch%50 == 0:
+        if batch%5 == 0:
             print(loss[-1])
 
 
@@ -123,12 +124,12 @@ for epoch in range(EPOCHS):
 
 idx = np.random.randint(low=0, high=BATCH_SIZE)
 mp.subplot(1,2,1)
-mp.imshow(X_real[idx, :, :, 0], cmap='gray_r')
+mp.imshow(X_real[idx, :, :, :])
 mp.axis('off')
 y_pred, z_pred = e_model.predict(X_real)
 X_pred = g_model.predict([y_pred, z_pred])
 mp.subplot(1,2,2)
-mp.imshow(X_pred[idx, :, :, 0], cmap='gray_r')
+mp.imshow(X_pred[idx, :, :, :])
 mp.axis('off')
 
 ############################################################################

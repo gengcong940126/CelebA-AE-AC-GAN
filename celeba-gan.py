@@ -21,20 +21,30 @@ DATASET = 'celeba'
 IMG_SHP = (64, 64, 3)
 CLS_SHP = 40
 LNV_SHP = 100
-EPOCHS = 3
+EPOCHS = 20
 BATCH_SIZE = 128
+DEPTH = 128
+LEARN_RATE = 0.0001
 
 ################################################################################
 # %% BUILD MODELS
 ################################################################################
 
 ##### INIT GAN
-gan = AEACGAN(IMG_SHP, CLS_SHP, LNV_SHP)
+gan = AEACGAN(IMG_SHP, CLS_SHP, LNV_SHP, DEPTH, LEARN_RATE)
 
 ##### BUILD ENCODER AND GENERATOR
 e_model = gan.build_encoder()
 g_model = gan.build_generator()
 d_model = gan.build_discriminator()
+
+################################################################################
+# %% LOAD MODEL WEIGHTS IF EXIST
+################################################################################
+
+#e_model.load_weights("/content/drive/My Drive/Data/enc_model.h5")
+#g_model.load_weights("/content/drive/My Drive/Data/gen_model.h5")
+#d_model.load_weights("/content/drive/My Drive/Data/dis_model.h5")
 
 ##### BUILD AUTOENCODER
 ae_model = gan.build_autoencoder(e_model, g_model)
@@ -90,7 +100,7 @@ for epoch in range(EPOCHS):
         X_fake = g_model.predict([y_fake, z_fake])
 
         ##### SET BINARY CLASS TO FAKE
-        w_fake = 0.1*np.ones((BATCH_SIZE, 1), dtype=int)
+        w_fake = 0.0*np.ones((BATCH_SIZE, 1), dtype=int)
 
         ##### CONCAT REAL AND FAKE DATA
         X_batch = np.concatenate((X_real, X_fake), axis=0)
@@ -118,59 +128,49 @@ for epoch in range(EPOCHS):
             print(loss[-1])
 
 
-############################################################################
-# %% PLOT AUTOENCODER RESULTS
-############################################################################
+    ############################################################################
+    # %% PLOT AUTOENCODER RESULTS
+    ############################################################################
 
-idx = np.random.randint(low=0, high=BATCH_SIZE)
-mp.subplot(1,2,1)
-mp.imshow(X_real[idx, :, :, :])
-mp.axis('off')
-y_pred, z_pred = e_model.predict(X_real)
-X_pred = g_model.predict([y_pred, z_pred])
-mp.subplot(1,2,2)
-mp.imshow(X_pred[idx, :, :, :])
-mp.axis('off')
+    idx = np.random.randint(low=0, high=BATCH_SIZE)
+    img0 = ((X_real[idx, :, :, :]+1.0)*127.5).astype(np.uint8)
+    y_pred, z_pred = e_model.predict(X_real)
+    X_pred = g_model.predict([y_pred, z_pred])
+    img1 = ((X_pred[idx, :, :, :]+1.0)*127.5).astype(np.uint8)
+    out = np.concatenate((img0, img1), axis=1)
+    mp.imsave(f'ae_{epoch:03d}.png', out)
 
-############################################################################
-# %% PLOT LOSS CURVES
-############################################################################
+    ############################################################################
+    # %% SAVE MODELS
+    ############################################################################
 
-fig = mp.figure(figsize=(10,8))
-mp.semilogy(np.array(loss)[:, [1, 2, 4, 5, 6]])
-mp.xlabel('batch')
-mp.ylabel('loss')
-mp.legend(['d_bin_loss', 'd_cat_loss', 'g_bin_loss',  'g_cat_loss', 'e_msq_loss'])
-mp.show()
+    g_model.save('/content/drive/My Drive/Data/gen_model.h5')
+    d_model.save('/content/drive/My Drive/Data/dis_model.h5')
+    acgan_model.save('/content/drive/My Drive/Data/gan_model.h5')
+    e_model.save('/content/drive/My Drive/Data/enc_model.h5')
+    ae_model.save('/content/drive/My Drive/Data/ae_model.h5')
 
-############################################################################
-# %% TEST ON INPUT STRING
-############################################################################
+    ############################################################################
+    # %% PLOT LOSS CURVES
+    ############################################################################
 
-fig = mp.figure(figsize=(CLS_SHP, 1))
-#input_string = np.arange(CLS_SHP)
+    fig = mp.figure(figsize=(10,8))
+    mp.semilogy(np.array(loss)[:, [1, 2, 4, 5, 6]])
+    mp.xlabel('batch')
+    mp.ylabel('loss')
+    mp.legend(['d_bin_loss', 'd_cat_loss', 'g_bin_loss',  'g_cat_loss', 'e_msq_loss'])
+    mp.savefig('loss.png')
+    mp.close()
 
-input_string = 3*np.ones((CLS_SHP,)).astype(int)
+    ############################################################################
+    # %% TEST GENERATOR
+    ############################################################################
 
-y = np.zeros((len(input_string), CLS_SHP))
-y[np.arange(len(input_string)), input_string] = 1
-z = np.random.randn(len(input_string), LNV_SHP)
-img = g_model.predict([y, z])
-img = img[:, :, :, 0]
-img = img.transpose(1,2,0)
-out = img.reshape(28, len(input_string)*28, order='F')
-out = np.concatenate((out[:,:len(input_string)*28//2], out[:,len(input_string)*28//2:]))
-mp.imshow(out, cmap='gray_r')
-ax = mp.gca()
-ax.get_xaxis().set_ticks([])
-ax.get_yaxis().set_ticks([])
-
-############################################################################
-# %% SAVE MODELS
-############################################################################
-
-g_model.save('gen_model.h5')
-d_model.save('dis_model.h5')
-acgan_model.save('gan_model.h5')
-e_model.save('enc_model.h5')
-ae_model.save('ae_model.h5')
+    y = 2.0*np.random.random((40,40))-1.0
+    z = np.random.random((40,100))
+    img = g_model.predict([y, z])
+    img = ((img[:, :, :, :]+1.0)*127.5).astype(np.uint8)
+    img = img.transpose(1,2,0,3)
+    out = img.reshape(64, 40*64, 3, order='F')
+    out = np.concatenate((out[:,0:40*64//4], out[:,40*64//4:40*64//2], out[:,40*64//2:40*64*3//4], out[:,40*64*3//4:]))
+    mp.imsave(f'gen_{epoch:03d}.png', out)

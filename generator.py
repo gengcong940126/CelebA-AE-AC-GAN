@@ -17,6 +17,7 @@ def image_generator(DATASET='celeba', BATCH_SIZE=128, CAT_SHP=40):
 
     ##### GET IMAGE FILES
     fimg = sorted(glob.glob('01-prep-data/X*.npy'))
+    #fimg = sorted(glob.glob('/content/drive/My Drive/Data/X*.npy'))
 
     ##### READ FIRST FILE TO BUFFER
     print(f'----> Reading {fimg[0]} <----')
@@ -50,14 +51,14 @@ def image_generator(DATASET='celeba', BATCH_SIZE=128, CAT_SHP=40):
             y = np.concatenate((y, np.load(fimg[i].replace('X', 'y'))), axis=0)
 
             ##### SHUFFLE
-            idx = np.random.permutation(len(X_in))
+            idx = np.random.permutation(len(X))
             X = X[idx, :, :, :]
             y = y[idx]
 
         else:
 
             ##### YIELD SET
-            yield X[:BATCH_SIZE, :, :, :], y[:BATCH_SIZE]
+            yield X[:BATCH_SIZE]/127.5-1.0, y[:BATCH_SIZE]
 
             ##### REMOVE YIELDED RESULTS
             X = np.delete(X, range(BATCH_SIZE), axis=0)

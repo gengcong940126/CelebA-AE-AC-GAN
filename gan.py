@@ -31,7 +31,7 @@ from tensorflow.keras.utils import plot_model
 
 class AEACGAN():
 
-    def __init__(self, IMG_SHP=(64, 64, 3), CLS_SHP=40, LNV_SHP=100, depth=64):
+    def __init__(self, IMG_SHP=(64, 64, 3), CLS_SHP=40, LNV_SHP=100, DEPTH=64, LEARN_RATE=0.0001):
 
         ##### IMAGE SHAPE
         self.IMG_SHP = IMG_SHP
@@ -43,10 +43,13 @@ class AEACGAN():
         self.LNV_SHP = LNV_SHP
 
         ##### DEPTH OF CONV LAYERS
-        self.depth = depth
+        self.DEPTH = DEPTH
 
         ##### KERNEL INIT
         self.init = RandomNormal(stddev=0.01)
+
+        ##### SET LEARNING RATE
+        self.LEARN_RATE = LEARN_RATE
 
     def  __repr__(self):
         ...
@@ -64,30 +67,31 @@ class AEACGAN():
         X_in = Input(self.IMG_SHP)
 
         ##### ADD NOISE TO IMAGE
-        net = GaussianNoise(0.05)(X_in)
+        #net = GaussianNoise(0.05)(X_in)
+        net = X_in
 
         ##### CONV2D LAYER WITH STRIDE 2
-        net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = Conv2D(self.DEPTH, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### CONV2D LAYER WITH STRIDE 2
-        net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = Conv2D(self.DEPTH*2, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### CONV2D LAYER WITH STRIDE 2
-        net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = Conv2D(self.DEPTH*4, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### TO DENSE
         net = Flatten()(net)
 
         ##### DENSE LAYER
-        net = Dense(self.depth)(net)
+        net = Dense(self.DEPTH*4)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### OUTPUT1: ONE-HOT-VECTOR OF CLASS
         y_out = Dense(self.CLS_SHP, activation='tanh')(net)
@@ -118,27 +122,27 @@ class AEACGAN():
         net = concatenate([y_in, z_in], axis=-1)
 
         ##### DENSE LAYER
-        net = Dense(8*8*self.depth)(net)
+        net = Dense(8*8*self.DEPTH*4)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### TO CONV2D
-        net = Reshape((8, 8, self.depth))(net)
+        net = Reshape((8, 8, self.DEPTH*4))(net)
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
-        net = Conv2DTranspose(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = Conv2DTranspose(self.DEPTH*4, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
-        net = Conv2DTranspose(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = Conv2DTranspose(self.DEPTH*2, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
-        net = Conv2DTranspose(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = Conv2DTranspose(self.DEPTH, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### OUTPUT IMAGE
         X_out = Conv2D(3, (8, 8), activation='tanh', padding='same', kernel_initializer=self.init)(net)
@@ -163,27 +167,27 @@ class AEACGAN():
         net = GaussianNoise(0.05)(X_in)
 
         ##### CONV2D LAYER WITH STRIDE 2
-        net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = Conv2D(self.DEPTH, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### CONV2D LAYER WITH STRIDE 2
-        net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = Conv2D(self.DEPTH*2, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### CONV2D LAYER WITH STRIDE 2
-        net = Conv2D(self.depth, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = Conv2D(self.DEPTH*4, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### TO DENSE
         net = Flatten()(net)
 
         ##### DENSE LAYER
-        net = Dense(self.depth)(net)
+        net = Dense(self.DEPTH*4)(net)
         net = LeakyReLU()(net)
-        net = Dropout(0.4)(net)
+        #net = Dropout(0.4)(net)
 
         ##### OUTPUT1: BINARY CLASSIFICATION
         w_out = Dense(1, activation='sigmoid')(net)
@@ -193,7 +197,7 @@ class AEACGAN():
 
         ##### BUILD, COMPILE AND RETURN MODEL
         model = Model(inputs = X_in, outputs = [w_out, y_out])
-        model.compile(loss=['binary_crossentropy', 'hinge'], optimizer=Adam(lr=0.0002, beta_1=0.5))
+        model.compile(loss=['binary_crossentropy', 'hinge'], optimizer=Adam(lr=self.LEARN_RATE, beta_1=0.5))
         return model
 
     def build_autoencoder(self, e_model, g_model):
@@ -215,7 +219,7 @@ class AEACGAN():
 
         ##### BUILD, COMPILE AND RETURN MODEL
         model = Model(inputs = X_in, outputs = X_out)
-        model.compile(loss='mean_absolute_error', optimizer=Adam(lr=0.0002, beta_1=0.5))
+        model.compile(loss='mean_absolute_error', optimizer=Adam(lr=self.LEARN_RATE, beta_1=0.5))
         return model
 
     def build_acgan(self, g_model, d_model):
@@ -247,5 +251,5 @@ class AEACGAN():
 
         ##### BUILD, COMPILE AND RETURN MODEL
         model = Model(inputs = [y_in, z_in], outputs = [w_out, y_out])
-        model.compile(loss=['binary_crossentropy', 'hinge'], optimizer=Adam(lr=0.0002, beta_1=0.5))
+        model.compile(loss=['binary_crossentropy', 'hinge'], optimizer=Adam(lr=self.LEARN_RATE, beta_1=0.5))
         return model

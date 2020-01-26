@@ -1,5 +1,5 @@
 """
-
+Script to read CelebA images, crop and downscale and save in batches to numpy arrays.
 """
 
 ################################################################################

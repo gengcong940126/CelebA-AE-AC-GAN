@@ -1,5 +1,9 @@
 """
-
+Code for an Auto-Encoder/Auxillary-Classifier GAN (AE-AC-GAN) to generate face
+based on CelebA dataset. The model consists of a encoder-generator (auto-encoder)
+and a generator-discriminator (auxillary classifier GAN). Discriminator, GAN and
+AE are trained per batch, with generator being trained in both auto-encoder and
+GAN models. Mode-collapse can therefore be avoided.
 """
 
 ################################################################################
@@ -21,10 +25,11 @@ DATASET = 'celeba'
 IMG_SHP = (64, 64, 3)
 CLS_SHP = 40
 LNV_SHP = 100
-EPOCHS = 20
+EPOCHS = 5
 BATCH_SIZE = 128
 DEPTH = 128
-LEARN_RATE = 0.0001
+LEARN_RATE = 0.0002
+RESTART = False
 
 ################################################################################
 # %% BUILD MODELS
@@ -42,9 +47,10 @@ d_model = gan.build_discriminator()
 # %% LOAD MODEL WEIGHTS IF EXIST
 ################################################################################
 
-#e_model.load_weights("/content/drive/My Drive/Data/enc_model.h5")
-#g_model.load_weights("/content/drive/My Drive/Data/gen_model.h5")
-#d_model.load_weights("/content/drive/My Drive/Data/dis_model.h5")
+if RESTART:
+    e_model.load_weights("/content/drive/My Drive/Data/enc_model.h5")
+    g_model.load_weights("/content/drive/My Drive/Data/gen_model.h5")
+    d_model.load_weights("/content/drive/My Drive/Data/dis_model.h5")
 
 ##### BUILD AUTOENCODER
 ae_model = gan.build_autoencoder(e_model, g_model)
@@ -56,7 +62,10 @@ acgan_model = gan.build_acgan(g_model, d_model)
 # %% INIT HISTORY
 ################################################################################
 
-loss = []
+if RESTART:
+    loss = np.load('/content/drive/My Drive/Data/loss.npy').tolist()
+else:
+    loss = []
 
 ################################################################################
 # %% LOOP THROUGH EPOCHS
@@ -127,7 +136,6 @@ for epoch in range(EPOCHS):
         if batch%5 == 0:
             print(loss[-1])
 
-
     ############################################################################
     # %% PLOT AUTOENCODER RESULTS
     ############################################################################
@@ -138,7 +146,7 @@ for epoch in range(EPOCHS):
     X_pred = g_model.predict([y_pred, z_pred])
     img1 = ((X_pred[idx, :, :, :]+1.0)*127.5).astype(np.uint8)
     out = np.concatenate((img0, img1), axis=1)
-    mp.imsave(f'ae_{epoch:03d}.png', out)
+    mp.imsave(f'/content/drive/My Drive/Data/ae_{epoch:03d}.png', out)
 
     ############################################################################
     # %% SAVE MODELS
@@ -159,18 +167,19 @@ for epoch in range(EPOCHS):
     mp.xlabel('batch')
     mp.ylabel('loss')
     mp.legend(['d_bin_loss', 'd_cat_loss', 'g_bin_loss',  'g_cat_loss', 'e_msq_loss'])
-    mp.savefig('loss.png')
+    mp.savefig('/content/drive/My Drive/Data/loss.png')
     mp.close()
+    np.save('/content/drive/My Drive/Data/loss.npy', np.array(loss))
 
     ############################################################################
     # %% TEST GENERATOR
     ############################################################################
 
-    y = 2.0*np.random.random((40,40))-1.0
-    z = np.random.random((40,100))
+    y = 2.0*np.random.random((CLS_SHP,CLS_SHP))-1.0
+    z = np.random.random((CLS_SHP,100))
     img = g_model.predict([y, z])
     img = ((img[:, :, :, :]+1.0)*127.5).astype(np.uint8)
     img = img.transpose(1,2,0,3)
-    out = img.reshape(64, 40*64, 3, order='F')
+    out = img.reshape(64, CLS_SHP*64, 3, order='F')
     out = np.concatenate((out[:,0:40*64//4], out[:,40*64//4:40*64//2], out[:,40*64//2:40*64*3//4], out[:,40*64*3//4:]))
-    mp.imsave(f'gen_{epoch:03d}.png', out)
+    mp.imsave(f'/content/drive/My Drive/Data/gen_{epoch:03d}.png', out)

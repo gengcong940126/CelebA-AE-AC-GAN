@@ -77,11 +77,13 @@ class AEACGAN():
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.DEPTH*2, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.DEPTH*4, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
@@ -90,6 +92,7 @@ class AEACGAN():
 
         ##### DENSE LAYER
         net = Dense(self.DEPTH*4)(net)
+        net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
@@ -123,6 +126,7 @@ class AEACGAN():
 
         ##### DENSE LAYER
         net = Dense(8*8*self.DEPTH*4)(net)
+        net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
@@ -131,16 +135,19 @@ class AEACGAN():
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
         net = Conv2DTranspose(self.DEPTH*4, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
         net = Conv2DTranspose(self.DEPTH*2, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
         net = Conv2DTranspose(self.DEPTH, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
@@ -173,11 +180,13 @@ class AEACGAN():
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.DEPTH*2, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.DEPTH*4, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
+        net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
@@ -186,6 +195,7 @@ class AEACGAN():
 
         ##### DENSE LAYER
         net = Dense(self.DEPTH*4)(net)
+        net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 

@@ -58,7 +58,7 @@ def image_generator(DATASET='celeba', BATCH_SIZE=128, CAT_SHP=40):
         else:
 
             ##### YIELD SET
-            yield X[:BATCH_SIZE]/127.5-1.0, y[:BATCH_SIZE]
+            yield X[:BATCH_SIZE]/127.5-1.0, (y[:BATCH_SIZE]+1.0)/2.0
 
             ##### REMOVE YIELDED RESULTS
             X = np.delete(X, range(BATCH_SIZE), axis=0)

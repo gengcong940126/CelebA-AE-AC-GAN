@@ -7,9 +7,6 @@
 
 """
 
-
-
-
 ################################################################################
 # %% IMPORT PACKAGES
 ################################################################################
@@ -77,13 +74,13 @@ class AEACGAN():
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.DEPTH*2, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        net = BatchNormalization()(net)
+        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.DEPTH*4, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        net = BatchNormalization()(net)
+        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
@@ -92,12 +89,12 @@ class AEACGAN():
 
         ##### DENSE LAYER
         net = Dense(self.DEPTH*4)(net)
-        net = BatchNormalization()(net)
+        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
         ##### OUTPUT1: ONE-HOT-VECTOR OF CLASS
-        y_out = Dense(self.CLS_SHP, activation='tanh')(net)
+        y_out = Dense(self.CLS_SHP, activation='sigmoid')(net)
 
         ##### OUTPUT2: LATENT NOISE PREDICTION
         z_out = Dense(self.LNV_SHP, activation='sigmoid')(net)
@@ -126,7 +123,7 @@ class AEACGAN():
 
         ##### DENSE LAYER
         net = Dense(8*8*self.DEPTH*4)(net)
-        net = BatchNormalization()(net)
+        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
@@ -135,19 +132,19 @@ class AEACGAN():
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
         net = Conv2DTranspose(self.DEPTH*4, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        net = BatchNormalization()(net)
+        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
         net = Conv2DTranspose(self.DEPTH*2, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        net = BatchNormalization()(net)
+        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
         ##### CONV2D TRANSPOSE WITH STRIDE 2
         net = Conv2DTranspose(self.DEPTH, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        net = BatchNormalization()(net)
+        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
@@ -180,13 +177,13 @@ class AEACGAN():
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.DEPTH*2, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        net = BatchNormalization()(net)
+        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.DEPTH*4, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)
-        net = BatchNormalization()(net)
+        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
@@ -195,7 +192,7 @@ class AEACGAN():
 
         ##### DENSE LAYER
         net = Dense(self.DEPTH*4)(net)
-        net = BatchNormalization()(net)
+        #net = BatchNormalization()(net)
         net = LeakyReLU()(net)
         #net = Dropout(0.4)(net)
 
@@ -203,11 +200,11 @@ class AEACGAN():
         w_out = Dense(1, activation='sigmoid')(net)
 
         ##### OUTPUT2: ONE-HOT-VECTOR OF CLASS
-        y_out = Dense(self.CLS_SHP, activation='tanh')(net)
+        y_out = Dense(self.CLS_SHP, activation='sigmoid')(net)
 
         ##### BUILD, COMPILE AND RETURN MODEL
         model = Model(inputs = X_in, outputs = [w_out, y_out])
-        model.compile(loss=['binary_crossentropy', 'hinge'], optimizer=Adam(lr=self.LEARN_RATE, beta_1=0.5))
+        model.compile(loss=['binary_crossentropy', 'binary_crossentropy'], optimizer=Adam(lr=self.LEARN_RATE, beta_1=0.5))
         return model
 
     def build_autoencoder(self, e_model, g_model):
@@ -261,5 +258,5 @@ class AEACGAN():
 
         ##### BUILD, COMPILE AND RETURN MODEL
         model = Model(inputs = [y_in, z_in], outputs = [w_out, y_out])
-        model.compile(loss=['binary_crossentropy', 'hinge'], optimizer=Adam(lr=self.LEARN_RATE, beta_1=0.5))
+        model.compile(loss=['binary_crossentropy', 'binary_crossentropy'], optimizer=Adam(lr=self.LEARN_RATE, beta_1=0.5))
         return model

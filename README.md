@@ -1,9 +1,8 @@
-Training# CelebA-AE-AC-GAN
+# CelebA-AE-AC-GAN
 
 ![Faces](img/faces.png)
 
-A auto-encoder + auxiliary GAN model is being explored in this project, to
-produce artificial, realistic human faces. Trainign data is based on the CelebA dataset, with some pre-processing steps.
+An auto-encoder + auxiliary classifier GAN model is explored in this project, to produce artificial, realistic human faces. Training data is based on the CelebA dataset, with some pre-processing steps.
 
 The presented work is based and expended on a similar study for digit and letter generation based on (Extended) MNIST datasets ([link](https://github.com/markusmeingast/MNIST-GAN)). Notable expansions are, switching to 3 color channels, a base resolution of 64x64 images, multi-class-multi-label classification and one-sided label-smoothing.
 
@@ -222,7 +221,7 @@ Below are the current model configurations:
 
 # Results
 
-Shown here are the results from a training run over 66 epochs. The model "convergence" shows an expected and adequate behavior. The GAN model parts is able to learn from each other, continuously improving. Some classes are accurately predicted and produced (e.g. gender), while others are harder (e.g. eye-glasses, 5 o'clock shadow). Initial epochs seem to focus on eyes and face-shape, while no sharp contours are visible yet. Further training initially improves face outline and facial features, followed by face shading and finally backgrounds. Notably the later epochs produce very colorful images. Further training is expected to show some more improvements and robustness, but other adjustments to the model architecture may prove more efficient.
+Shown here are the results from a training run over 70 epochs. The model "convergence" shows an expected and adequate behavior. The GAN parts (discriminator and generator) are able to learn from each other, continuously improving. Some classes are accurately predicted and generated (e.g. gender), while others are harder (e.g. eye-glasses, 5 o'clock shadow). Initial epochs seem to focus on eyes and face-shape, while no sharp contours are visible yet. Further training initially improves face outline and facial features, followed by face shading and finally backgrounds. Notably the later epochs produce very colorful images. Further training is expected to show some more improvements and robustness, but other adjustments to the model architecture may prove more efficient.
 
 ### Loss Curve
 
@@ -237,6 +236,8 @@ Combined with the loss curves, the accuracy/F1 score are a good indicator of mod
 ![accuracy curve](img/acc.png)
 
 ### Auto-Encoder Performance
+
+Epoch 1/5/10/50:
 
 ![ae performance epoch 1](img/ae_001.png)\
 ![ae performance epoch 5](img/ae_005.png)\

@@ -207,7 +207,12 @@ for epoch in range(EPOCHS):
     ############################################################################
 
     fig = mp.figure(figsize=(10,8))
-    mp.plot(np.array(acc))
+    #mp.plot(np.array(acc))
+    N = 16
+    mp.plot(np.convolve(np.array(acc)[:,0], np.ones((N,))/N)[(N-1):-N])
+    mp.plot(np.convolve(np.array(acc)[:,1], np.ones((N,))/N)[(N-1):-N])
+    mp.plot(np.convolve(np.array(acc)[:,2], np.ones((N,))/N)[(N-1):-N])
+    mp.plot(np.convolve(np.array(acc)[:,3], np.ones((N,))/N)[(N-1):-N])
     mp.xlabel('batch')
     mp.ylabel('accuracy')
     mp.legend(['D(w) acc', 'D(y) acc', 'D(G(w)) acc',  'D(G(y)) acc'])

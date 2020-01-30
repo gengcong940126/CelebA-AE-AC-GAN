@@ -1,20 +1,17 @@
-# CelebA-AE-AC-GAN
+Training# CelebA-AE-AC-GAN
 
 ![Faces](img/faces.png)
 
 A auto-encoder + auxiliary GAN model is being explored in this project, to
-produce artificial, realistic human faces. Trainign data is based on the CelebA
-dataset, with some preprocessing steps.
+produce artificial, realistic human faces. Trainign data is based on the CelebA dataset, with some pre-processing steps.
 
-The presented work is based and expended on a similar study for digit and letter
-generation based on (Extended) MNIST datasets ([link](https://github.com/markusmeingast/MNIST-GAN)). Notable expansions are, switching to 3 color channels, a base resolution of 64x64 images, multi-class-multi-label classification and one-sided label-smoothing.
+The presented work is based and expended on a similar study for digit and letter generation based on (Extended) MNIST datasets ([link](https://github.com/markusmeingast/MNIST-GAN)). Notable expansions are, switching to 3 color channels, a base resolution of 64x64 images, multi-class-multi-label classification and one-sided label-smoothing.
 
 ## Data Preprocessing
 
-The CelebA dataset consists of over 200.000 images of celebrities. In order to
-reduce computational expenses, the dataset was reduced to about 1/3. Original
-images are of a shape 218x178. For the work presented here, the images are cropped to a window with upper left corner at
-59, 24 and a width an height of 128 pixels each. Finally each image is downsampled to a size of 64x64.
+The [CelebA Dataset](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) consists of over 200.000 images of celebrities. In order to
+reduce computational expenses, the dataset was reduced to about 1/3 samples. Original images are of a shape 218x178. For the work presented here, the images are cropped to a window with upper left corner at
+59px, 24px and a width an height of 128 pixels each. Finally each image is down-sampled to a size of 64x64.
 
 ## Nomenclature
 
@@ -34,6 +31,7 @@ images are of a shape 218x178. For the work presented here, the images are cropp
 * binary-crossentropy is used for one-hot encoded classification of images (multi-class-multi-label)
 * autoencoder uses MAE (MSE creates slightly blurry images)
 * Generator, discriminator and encoder to use LeakyReLU and Dropout (BatchNormalization causes issues in convergence and mode collapse). This is likely the largest lever to improve image quality in future developments.
+* Class labels are scaled to binary 0/1 from original dataset -1/1. (Both approaches were tested with no notable improvement. -1/1 may make sense when scaling to higher fidelity)
 
 
 ## AE-AC-GAN Model
@@ -253,3 +251,7 @@ Epoch 1/5/10/50:
 ![gen performance epoch 5](img/gen_005.png)\
 ![gen performance epoch 10](img/gen_010.png)\
 ![gen performance epoch 50](img/gen_050.png)
+
+# References
+
+* [CelebA Dataset](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)

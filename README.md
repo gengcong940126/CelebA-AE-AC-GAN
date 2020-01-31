@@ -221,11 +221,11 @@ Below are the current model configurations:
 
 # Results
 
-Shown here are the results from a training run over 70 epochs. The model "convergence" shows an expected and adequate behavior. The GAN parts (discriminator and generator) are able to learn from each other, continuously improving. Some classes are accurately predicted and generated (e.g. gender), while others are harder (e.g. eye-glasses, 5 o'clock shadow). Initial epochs seem to focus on eyes and face-shape, while no sharp contours are visible yet. Further training initially improves face outline and facial features, followed by face shading and finally backgrounds. Notably the later epochs produce very colorful images. Further training is expected to show some more improvements and robustness, but other adjustments to the model architecture may prove more efficient.
+Shown here are the results from a training run over 100 epochs. The model "convergence" shows an expected and adequate behavior. The GAN parts (discriminator and generator) are able to learn from each other, continuously improving. Some classes are accurately predicted and generated (e.g. gender), while others are harder (e.g. eye-glasses, 5 o'clock shadow). Initial epochs seem to focus on eyes and face-shape, while no sharp contours are visible yet. Further training initially improves face outline and facial features, followed by face shading and finally backgrounds. Notably the later epochs produce very colorful images. Further training is expected to show some more improvements and robustness, but other adjustments to the model architecture may prove more efficient.
 
 ### Loss Curve
 
-The loss curve shows little to no actual improvement after very early epochs. Loss peaks can be observed that occur spontaneously, likely attributed to LeakyReLU activations. The model recovers quickly from these conditions.
+The loss curve shows only little improvement after very early epochs. Loss peaks can be observed that occur spontaneously, likely attributed to LeakyReLU activations. The model recovers quickly from these conditions.
 
 ![loss curve](img/loss.png)
 
@@ -237,21 +237,23 @@ Combined with the loss curves, the accuracy/F1 score are a good indicator of mod
 
 ### Auto-Encoder Performance
 
-Epoch 1/5/10/50:
+Epoch 1/5/10/50/100:
 
-![ae performance epoch 1](img/ae_001.png)\
-![ae performance epoch 5](img/ae_005.png)\
-![ae performance epoch 10](img/ae_010.png)\
-![ae performance epoch 50](img/ae_050.png)
+![ae performance epoch 1](img/ae_000.png)\
+![ae performance epoch 5](img/ae_004.png)\
+![ae performance epoch 10](img/ae_009.png)\
+![ae performance epoch 50](img/ae_049.png)\
+![ae performance epoch 100](img/ae_099.png)
 
 ### Generator Performance
 
-Epoch 1/5/10/50:
+Epoch 1/5/10/50/100:
 
-![gen performance epoch 1](img/gen_001.png)\
-![gen performance epoch 5](img/gen_005.png)\
-![gen performance epoch 10](img/gen_010.png)\
-![gen performance epoch 50](img/gen_050.png)
+![gen performance epoch 1](img/gen_000.png)\
+![gen performance epoch 5](img/gen_004.png)\
+![gen performance epoch 10](img/gen_009.png)\
+![gen performance epoch 50](img/gen_049.png)\
+![gen performance epoch 100](img/gen_099.png)
 
 # References
 

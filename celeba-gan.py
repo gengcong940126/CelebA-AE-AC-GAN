@@ -25,10 +25,10 @@ from sklearn.metrics import accuracy_score, f1_score
 DATASET = 'celeba'
 IMG_SHP = (64, 64, 3)
 CLS_SHP = 40
-LNV_SHP = 100
+LNV_SHP = 200
 EPOCHS = 5
 BATCH_SIZE = 256
-DEPTH = 64
+DEPTH = 128
 LEARN_RATE = 0.0002
 RESTART = False
 
@@ -227,7 +227,7 @@ for epoch in range(EPOCHS):
     #y = 2.0*np.random.random((CLS_SHP,CLS_SHP))-1.0
     #y = 2.0*np.random.randint(low=0, high=2, size=(CLS_SHP, CLS_SHP))-1.0
     y = np.random.randint(low=0, high=2, size=(CLS_SHP, CLS_SHP))
-    z = np.random.random((CLS_SHP,100))
+    z = np.random.random((CLS_SHP,LNV_SHP))
     img = g_model.predict([y, z])
     img = ((img[:, :, :, :]+1.0)*127.5).astype(np.uint8)
     img = img.transpose(1,2,0,3)

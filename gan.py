@@ -168,7 +168,8 @@ class AEACGAN():
         X_in = Input(self.IMG_SHP)
 
         ##### ADD NOISE TO IMAGE
-        net = GaussianNoise(0.05)(X_in)
+        #net = GaussianNoise(0.05)(X_in)
+        net = X_in
 
         ##### CONV2D LAYER WITH STRIDE 2
         net = Conv2D(self.DEPTH, (4, 4), strides=(2, 2), padding='same', kernel_initializer=self.init)(net)

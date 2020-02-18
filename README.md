@@ -1,4 +1,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TensorFlow](https://img.shields.io/static/v1?label=TensorFlow&message=2.0&color=orange)](https://www.tensorflow.org/)
+[![Python](https://img.shields.io/static/v1?label=Python&message=3.7.5&color=green)](https://www.python.org/downloads/release/python-375/)
 
 # CelebA-AE-AC-GAN
 

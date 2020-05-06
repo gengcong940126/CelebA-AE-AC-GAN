@@ -17,6 +17,7 @@ from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as mp
 from sklearn.metrics import accuracy_score, f1_score
+import tensorflow as tf
 
 ################################################################################
 # %% CONSTANTS
@@ -26,11 +27,22 @@ DATASET = 'celeba'
 IMG_SHP = (64, 64, 3)
 CLS_SHP = 40
 LNV_SHP = 200
-EPOCHS = 5
+LAST_EPOCH = 0
+EPOCHS = 25
 BATCH_SIZE = 256
-DEPTH = 128
-LEARN_RATE = 0.0002
+DEPTH = 32
+LEARN_RATE = 0.00005
 RESTART = False
+
+################################################################################
+# %% KERAS/TF SETTINGS
+################################################################################
+
+##### ALLOW GPU MEMORY GROWTH
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    #tf.config.experimental.set_memory_growth(gpu, True)
+    tf.config.experimental.set_virtual_device_configuration(gpu, [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=2500)])
 
 ################################################################################
 # %% BUILD MODELS
@@ -49,9 +61,9 @@ d_model = gan.build_discriminator()
 ################################################################################
 
 if RESTART:
-    e_model.load_weights("/content/drive/My Drive/Data/enc_model.h5")
-    g_model.load_weights("/content/drive/My Drive/Data/gen_model.h5")
-    d_model.load_weights("/content/drive/My Drive/Data/dis_model.h5")
+    e_model.load_weights("02-results/enc_model.h5")
+    g_model.load_weights("02-results/gen_model.h5")
+    d_model.load_weights("02-results/dis_model.h5")
 
 ##### BUILD AUTOENCODER
 ae_model = gan.build_autoencoder(e_model, g_model)
@@ -64,8 +76,8 @@ acgan_model = gan.build_acgan(g_model, d_model)
 ################################################################################
 
 if RESTART:
-    loss = np.load('/content/drive/My Drive/Data/loss.npy').tolist()
-    acc = np.load('/content/drive/My Drive/Data/acc.npy').tolist()
+    loss = np.load('02-results/loss.npy').tolist()
+    acc = np.load('02-results/acc.npy').tolist()
 else:
     loss = []
     acc = []
@@ -74,7 +86,7 @@ else:
 # %% LOOP THROUGH EPOCHS
 ################################################################################
 
-for epoch in range(EPOCHS):
+for epoch in range(LAST_EPOCH, LAST_EPOCH+EPOCHS):
 
     print(f'Epoch: {epoch}')
 
@@ -110,7 +122,7 @@ for epoch in range(EPOCHS):
         z_fake = np.random.randn(BATCH_SIZE, LNV_SHP)
 
         ##### PREDICT IMAGE FROM RANDOM INPUT
-        X_fake = g_model.predict([y_fake, z_fake])
+        X_fake = g_model.predict([y_fake, z_fake], batch_size=BATCH_SIZE)
 
         ##### SET BINARY CLASS TO FAKE
         w_fake = 0.0*np.ones((BATCH_SIZE, 1), dtype=int)
@@ -148,13 +160,13 @@ for epoch in range(EPOCHS):
         loss.append([d1_loss, d2_loss, d3_loss, g1_loss, g2_loss, g3_loss, e1_loss])
 
         ##### TEST DISCRIMINATOR MODEL ACCURACY
-        outputs = d_model.predict(X_batch)
+        outputs = d_model.predict(X_batch, batch_size=BATCH_SIZE)
         y_batch.astype(int)
         d2_acc = accuracy_score(w_batch.round(), outputs[0].round(), normalize=True)
         d3_acc = f1_score(y_batch.round(), outputs[1].round(), average='samples')
 
         ##### TEST GENERATOR MODEL ACCURACY
-        outputs = acgan_model.predict([y_fake, z_fake])
+        outputs = acgan_model.predict([y_fake, z_fake], batch_size=BATCH_SIZE)
         g2_acc = accuracy_score(w_real.round(), outputs[0].round(), normalize=True)
         g3_acc = f1_score(y_fake.round(), outputs[1].round(), average='samples')
 
@@ -173,21 +185,21 @@ for epoch in range(EPOCHS):
 
     idx = np.random.randint(low=0, high=BATCH_SIZE)
     img0 = ((X_real[idx, :, :, :]+1.0)*127.5).astype(np.uint8)
-    y_pred, z_pred = e_model.predict(X_real)
-    X_pred = g_model.predict([y_pred, z_pred])
+    y_pred, z_pred = e_model.predict(X_real, batch_size=BATCH_SIZE)
+    X_pred = g_model.predict([y_pred, z_pred], batch_size=BATCH_SIZE)
     img1 = ((X_pred[idx, :, :, :]+1.0)*127.5).astype(np.uint8)
     out = np.concatenate((img0, img1), axis=1)
-    mp.imsave(f'/content/drive/My Drive/Data/ae_{epoch:03d}.png', out)
+    mp.imsave(f'02-results/ae_{epoch:03d}.png', out)
 
     ############################################################################
     # %% SAVE MODELS
     ############################################################################
 
-    g_model.save('/content/drive/My Drive/Data/gen_model.h5')
-    d_model.save('/content/drive/My Drive/Data/dis_model.h5')
-    acgan_model.save('/content/drive/My Drive/Data/gan_model.h5')
-    e_model.save('/content/drive/My Drive/Data/enc_model.h5')
-    ae_model.save('/content/drive/My Drive/Data/ae_model.h5')
+    g_model.save('02-results/gen_model.h5')
+    d_model.save('02-results/dis_model.h5')
+    acgan_model.save('02-results/gan_model.h5')
+    e_model.save('02-results/enc_model.h5')
+    ae_model.save('02-results/ae_model.h5')
 
     ############################################################################
     # %% PLOT LOSS CURVES
@@ -198,9 +210,9 @@ for epoch in range(EPOCHS):
     mp.xlabel('batch')
     mp.ylabel('loss')
     mp.legend(['D(w) loss', 'D(y) loss', 'D(G(w)) loss',  'D(G(y)) loss', 'E(X) loss'])
-    mp.savefig('/content/drive/My Drive/Data/loss.png')
+    mp.savefig('02-results/loss.png')
     mp.close()
-    np.save('/content/drive/My Drive/Data/loss.npy', np.array(loss))
+    np.save('02-results/loss.npy', np.array(loss))
 
     ############################################################################
     # %% PLOT ACCURACY CURVES
@@ -216,24 +228,19 @@ for epoch in range(EPOCHS):
     mp.xlabel('batch')
     mp.ylabel('accuracy')
     mp.legend(['D(w) acc', 'D(y) acc', 'D(G(w)) acc',  'D(G(y)) acc'])
-    mp.savefig('/content/drive/My Drive/Data/acc.png')
+    mp.savefig('02-results/acc.png')
     mp.close()
-    np.save('/content/drive/My Drive/Data/acc.npy', np.array(acc))
+    np.save('02-results/acc.npy', np.array(acc))
 
     ############################################################################
     # %% TEST GENERATOR
     ############################################################################
 
-    #y = 2.0*np.random.random((CLS_SHP,CLS_SHP))-1.0
-    #y = 2.0*np.random.randint(low=0, high=2, size=(CLS_SHP, CLS_SHP))-1.0
     y = np.random.randint(low=0, high=2, size=(CLS_SHP, CLS_SHP))
     z = np.random.random((CLS_SHP,LNV_SHP))
-    img = g_model.predict([y, z])
+    img = g_model.predict([y, z], batch_size=CLS_SHP)
     img = ((img[:, :, :, :]+1.0)*127.5).astype(np.uint8)
     img = img.transpose(1,2,0,3)
     out = img.reshape(64, CLS_SHP*64, 3, order='F')
     out = np.concatenate((out[:,0:40*64//4], out[:,40*64//4:40*64//2], out[:,40*64//2:40*64*3//4], out[:,40*64*3//4:]))
-    mp.imsave(f'/content/drive/My Drive/Data/gen_{epoch:03d}.png', out)
-
-
-acgan_model.summary()
+    mp.imsave(f'02-results/gen_{epoch:03d}.png', out)

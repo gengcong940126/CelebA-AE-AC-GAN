@@ -16,8 +16,7 @@ import numpy as np
 def image_generator(DATASET='celeba', BATCH_SIZE=128, CAT_SHP=40):
 
     ##### GET IMAGE FILES
-    #fimg = sorted(glob.glob('01-prep-data/X*.npy'))
-    fimg = sorted(glob.glob('/content/drive/My Drive/Data/X*.npy'))
+    fimg = sorted(glob.glob('01-prep-data/X*.npy'))
 
     ##### READ FIRST FILE TO BUFFER
     print(f'----> Reading {fimg[0]} <----')

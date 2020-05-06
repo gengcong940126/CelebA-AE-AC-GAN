@@ -26,15 +26,16 @@ reduce computational expenses, the dataset was reduced to about 1/3 samples. Ori
 ## Assumptions
 
 * Real samples get label 1, fake get label 0
-* One-sided feature smoothing (real = 0.9, fake = 0.0)
+* Label smoothing (optional for discriminator training)
 * Latent noise vector in interval [0,1]
 * Images normalized to [-1,1] (tanh)
-* GaussianNoise is added to discriminator input (stddev = 0.05)
+* GaussianNoise is added to discriminator input (optional)
 * binary-crossentropy is used for binary classification, i.e. real or fake images
 * binary-crossentropy is used for one-hot encoded classification of images (multi-class-multi-label)
 * autoencoder uses MAE (MSE creates slightly blurry images)
 * Generator, discriminator and encoder to use LeakyReLU and Dropout (BatchNormalization causes issues in convergence and mode collapse). This is likely the largest lever to improve image quality in future developments.
 * Class labels are scaled to binary 0/1 from original dataset -1/1. (Both approaches were tested with no notable improvement. -1/1 may make sense when scaling to higher fidelity)
+* Learning rate for autoencoder seems optimal at about 25% of the other networks
 
 
 ## AE-AC-GAN Model
@@ -74,6 +75,41 @@ Training is therefore defined in 3 steps, per batch: discriminator training on r
 
 Below are the current model configurations:
 
+### Encoder
+
+    Model: "encoder"
+    __________________________________________________________________________________________________
+    Layer (type)                    Output Shape         Param #     Connected to                     
+    ==================================================================================================
+    input_1 (InputLayer)            [(None, 64, 64, 3)]  0                                            
+    __________________________________________________________________________________________________
+    conv2d (Conv2D)                 (None, 32, 32, 32)   1568        input_1[0][0]                    
+    __________________________________________________________________________________________________
+    leaky_re_lu (LeakyReLU)         (None, 32, 32, 32)   0           conv2d[0][0]                     
+    __________________________________________________________________________________________________
+    conv2d_1 (Conv2D)               (None, 16, 16, 64)   32832       leaky_re_lu[0][0]                
+    __________________________________________________________________________________________________
+    leaky_re_lu_1 (LeakyReLU)       (None, 16, 16, 64)   0           conv2d_1[0][0]                   
+    __________________________________________________________________________________________________
+    conv2d_2 (Conv2D)               (None, 8, 8, 128)    131200      leaky_re_lu_1[0][0]              
+    __________________________________________________________________________________________________
+    leaky_re_lu_2 (LeakyReLU)       (None, 8, 8, 128)    0           conv2d_2[0][0]                   
+    __________________________________________________________________________________________________
+    flatten (Flatten)               (None, 8192)         0           leaky_re_lu_2[0][0]              
+    __________________________________________________________________________________________________
+    dense (Dense)                   (None, 128)          1048704     flatten[0][0]                    
+    __________________________________________________________________________________________________
+    leaky_re_lu_3 (LeakyReLU)       (None, 128)          0           dense[0][0]                      
+    __________________________________________________________________________________________________
+    dense_1 (Dense)                 (None, 40)           5160        leaky_re_lu_3[0][0]              
+    __________________________________________________________________________________________________
+    dense_2 (Dense)                 (None, 200)          25800       leaky_re_lu_3[0][0]              
+    ==================================================================================================
+    Total params: 1,245,264
+    Trainable params: 1,245,264
+    Non-trainable params: 0
+    __________________________________________________________________________________________________
+
 ### Generator
 
     Model: "generator"
@@ -82,33 +118,33 @@ Below are the current model configurations:
     ==================================================================================================
     input_2 (InputLayer)            [(None, 40)]         0                                            
     __________________________________________________________________________________________________
-    input_3 (InputLayer)            [(None, 100)]        0                                            
+    input_3 (InputLayer)            [(None, 200)]        0                                            
     __________________________________________________________________________________________________
-    concatenate (Concatenate)       (None, 140)          0           input_2[0][0]                    
+    concatenate (Concatenate)       (None, 240)          0           input_2[0][0]                    
                                                                      input_3[0][0]                    
     __________________________________________________________________________________________________
-    dense_3 (Dense)                 (None, 16384)        2310144     concatenate[0][0]                
+    dense_3 (Dense)                 (None, 8192)         1974272     concatenate[0][0]                
     __________________________________________________________________________________________________
-    leaky_re_lu_4 (LeakyReLU)       (None, 16384)        0           dense_3[0][0]                    
+    leaky_re_lu_4 (LeakyReLU)       (None, 8192)         0           dense_3[0][0]                    
     __________________________________________________________________________________________________
-    reshape (Reshape)               (None, 8, 8, 256)    0           leaky_re_lu_4[0][0]              
+    reshape (Reshape)               (None, 8, 8, 128)    0           leaky_re_lu_4[0][0]              
     __________________________________________________________________________________________________
-    conv2d_transpose (Conv2DTranspo (None, 16, 16, 256)  1048832     reshape[0][0]                    
+    conv2d_transpose (Conv2DTranspo (None, 16, 16, 128)  262272      reshape[0][0]                    
     __________________________________________________________________________________________________
-    leaky_re_lu_5 (LeakyReLU)       (None, 16, 16, 256)  0           conv2d_transpose[0][0]           
+    leaky_re_lu_5 (LeakyReLU)       (None, 16, 16, 128)  0           conv2d_transpose[0][0]           
     __________________________________________________________________________________________________
-    conv2d_transpose_1 (Conv2DTrans (None, 32, 32, 128)  524416      leaky_re_lu_5[0][0]              
+    conv2d_transpose_1 (Conv2DTrans (None, 32, 32, 64)   131136      leaky_re_lu_5[0][0]              
     __________________________________________________________________________________________________
-    leaky_re_lu_6 (LeakyReLU)       (None, 32, 32, 128)  0           conv2d_transpose_1[0][0]         
+    leaky_re_lu_6 (LeakyReLU)       (None, 32, 32, 64)   0           conv2d_transpose_1[0][0]         
     __________________________________________________________________________________________________
-    conv2d_transpose_2 (Conv2DTrans (None, 64, 64, 64)   131136      leaky_re_lu_6[0][0]              
+    conv2d_transpose_2 (Conv2DTrans (None, 64, 64, 32)   32800       leaky_re_lu_6[0][0]              
     __________________________________________________________________________________________________
-    leaky_re_lu_7 (LeakyReLU)       (None, 64, 64, 64)   0           conv2d_transpose_2[0][0]         
+    leaky_re_lu_7 (LeakyReLU)       (None, 64, 64, 32)   0           conv2d_transpose_2[0][0]         
     __________________________________________________________________________________________________
-    conv2d_3 (Conv2D)               (None, 64, 64, 3)    12291       leaky_re_lu_7[0][0]              
+    conv2d_3 (Conv2D)               (None, 64, 64, 3)    6147        leaky_re_lu_7[0][0]              
     ==================================================================================================
-    Total params: 4,026,819
-    Trainable params: 4,026,819
+    Total params: 2,406,627
+    Trainable params: 2,406,627
     Non-trainable params: 0
     __________________________________________________________________________________________________
 
@@ -120,112 +156,76 @@ Below are the current model configurations:
     ==================================================================================================
     input_4 (InputLayer)            [(None, 64, 64, 3)]  0                                            
     __________________________________________________________________________________________________
-    gaussian_noise (GaussianNoise)  (None, 64, 64, 3)    0           input_4[0][0]                    
+    conv2d_4 (Conv2D)               (None, 32, 32, 32)   1568        input_4[0][0]                    
     __________________________________________________________________________________________________
-    conv2d_4 (Conv2D)               (None, 32, 32, 64)   3136        gaussian_noise[0][0]             
+    leaky_re_lu_8 (LeakyReLU)       (None, 32, 32, 32)   0           conv2d_4[0][0]                   
     __________________________________________________________________________________________________
-    leaky_re_lu_8 (LeakyReLU)       (None, 32, 32, 64)   0           conv2d_4[0][0]                   
+    conv2d_5 (Conv2D)               (None, 16, 16, 64)   32832       leaky_re_lu_8[0][0]              
     __________________________________________________________________________________________________
-    conv2d_5 (Conv2D)               (None, 16, 16, 128)  131200      leaky_re_lu_8[0][0]              
+    leaky_re_lu_9 (LeakyReLU)       (None, 16, 16, 64)   0           conv2d_5[0][0]                   
     __________________________________________________________________________________________________
-    leaky_re_lu_9 (LeakyReLU)       (None, 16, 16, 128)  0           conv2d_5[0][0]                   
+    conv2d_6 (Conv2D)               (None, 8, 8, 128)    131200      leaky_re_lu_9[0][0]              
     __________________________________________________________________________________________________
-    conv2d_6 (Conv2D)               (None, 8, 8, 256)    524544      leaky_re_lu_9[0][0]              
+    leaky_re_lu_10 (LeakyReLU)      (None, 8, 8, 128)    0           conv2d_6[0][0]                   
     __________________________________________________________________________________________________
-    leaky_re_lu_10 (LeakyReLU)      (None, 8, 8, 256)    0           conv2d_6[0][0]                   
+    flatten_1 (Flatten)             (None, 8192)         0           leaky_re_lu_10[0][0]             
     __________________________________________________________________________________________________
-    flatten_1 (Flatten)             (None, 16384)        0           leaky_re_lu_10[0][0]             
+    dense_4 (Dense)                 (None, 128)          1048704     flatten_1[0][0]                  
     __________________________________________________________________________________________________
-    dense_4 (Dense)                 (None, 256)          4194560     flatten_1[0][0]                  
+    leaky_re_lu_11 (LeakyReLU)      (None, 128)          0           dense_4[0][0]                    
     __________________________________________________________________________________________________
-    leaky_re_lu_11 (LeakyReLU)      (None, 256)          0           dense_4[0][0]                    
+    dense_5 (Dense)                 (None, 1)            129         leaky_re_lu_11[0][0]             
     __________________________________________________________________________________________________
-    dense_5 (Dense)                 (None, 1)            257         leaky_re_lu_11[0][0]             
-    __________________________________________________________________________________________________
-    dense_6 (Dense)                 (None, 40)           10280       leaky_re_lu_11[0][0]             
+    dense_6 (Dense)                 (None, 40)           5160        leaky_re_lu_11[0][0]             
     ==================================================================================================
-    Total params: 4,863,977
-    Trainable params: 4,863,977
+    Total params: 1,219,593
+    Trainable params: 1,219,593
     Non-trainable params: 0
     __________________________________________________________________________________________________
 
-### Encoder
-
-    Model: "encoder"
-    __________________________________________________________________________________________________
-    Layer (type)                    Output Shape         Param #     Connected to                     
-    ==================================================================================================
-    input_1 (InputLayer)            [(None, 64, 64, 3)]  0                                            
-    __________________________________________________________________________________________________
-    conv2d (Conv2D)                 (None, 32, 32, 64)   3136        input_1[0][0]                    
-    __________________________________________________________________________________________________
-    leaky_re_lu (LeakyReLU)         (None, 32, 32, 64)   0           conv2d[0][0]                     
-    __________________________________________________________________________________________________
-    conv2d_1 (Conv2D)               (None, 16, 16, 128)  131200      leaky_re_lu[0][0]                
-    __________________________________________________________________________________________________
-    leaky_re_lu_1 (LeakyReLU)       (None, 16, 16, 128)  0           conv2d_1[0][0]                   
-    __________________________________________________________________________________________________
-    conv2d_2 (Conv2D)               (None, 8, 8, 256)    524544      leaky_re_lu_1[0][0]              
-    __________________________________________________________________________________________________
-    leaky_re_lu_2 (LeakyReLU)       (None, 8, 8, 256)    0           conv2d_2[0][0]                   
-    __________________________________________________________________________________________________
-    flatten (Flatten)               (None, 16384)        0           leaky_re_lu_2[0][0]              
-    __________________________________________________________________________________________________
-    dense (Dense)                   (None, 256)          4194560     flatten[0][0]                    
-    __________________________________________________________________________________________________
-    leaky_re_lu_3 (LeakyReLU)       (None, 256)          0           dense[0][0]                      
-    __________________________________________________________________________________________________
-    dense_1 (Dense)                 (None, 40)           10280       leaky_re_lu_3[0][0]              
-    __________________________________________________________________________________________________
-    dense_2 (Dense)                 (None, 100)          25700       leaky_re_lu_3[0][0]              
-    ==================================================================================================
-    Total params: 4,889,420
-    Trainable params: 4,889,420
-    Non-trainable params: 0
-    __________________________________________________________________________________________________
 
 ### Auto-Encoder
 
     Model: "autoencoder"
-    _________________________________________________________________________________________
-    Layer (type)           Output Shape              Param #     Connected to                     
-    =========================================================================================
-    input_5 (InputLayer)   [(None, 64, 64, 3)]  0                                            
-    _________________________________________________________________________________________
-    encoder (Model)        [(None, 40), (None, 100)] 4889420     input_5[0][0]                    
-    _________________________________________________________________________________________
-    generator (Model)      (None, 64, 64, 3)         4026819     encoder[1][0]                      
-                                                                 encoder[1][1]                      
-    =========================================================================================
-    Total params: 8,916,239
-    Trainable params: 8,916,239
+    __________________________________________________________________________________________________
+    Layer (type)                    Output Shape         Param #     Connected to                     
+    ==================================================================================================
+    input_7 (InputLayer)            [(None, 64, 64, 3)]  0                                            
+    __________________________________________________________________________________________________
+    model (Model)                   [(None, 40), (None,  1245264     input_7[0][0]                    
+    __________________________________________________________________________________________________
+    model_1 (Model)                 (None, 64, 64, 3)    2406627     model[1][0]                      
+                                                                     model[1][1]                      
+    ==================================================================================================
+    Total params: 3,651,891
+    Trainable params: 3,651,891
     Non-trainable params: 0
-    _________________________________________________________________________________________
+    __________________________________________________________________________________________________
 
 
 ### AC-GAN
 
     Model: "acgan"
-    _________________________________________________________________________________________
-    Layer (type)           Output Shape            Param #     Connected to                     
-    =========================================================================================
-    input_6 (InputLayer)   [(None, 40)]            0                                            
-    _________________________________________________________________________________________
-    input_7 (InputLayer)   [(None, 100)]           0                                            
-    _________________________________________________________________________________________
-    generator (Model)      (None, 64, 64, 3)       4026819     input_6[0][0]                    
-                                                               input_7[0][0]                    
-    _________________________________________________________________________________________
-    discriminator (Model)  [(None, 1), (None, 40)] 4863977     generator[2][0]                    
-    =========================================================================================
-    Total params: 8,890,796
-    Trainable params: 4,026,819
-    Non-trainable params: 4,863,977
-    _________________________________________________________________________________________
+    __________________________________________________________________________________________________
+    Layer (type)                    Output Shape         Param #     Connected to                     
+    ==================================================================================================
+    input_5 (InputLayer)            [(None, 40)]         0                                            
+    __________________________________________________________________________________________________
+    input_6 (InputLayer)            [(None, 200)]        0                                            
+    __________________________________________________________________________________________________
+    model_1 (Model)                 (None, 64, 64, 3)    2406627     input_5[0][0]                    
+                                                                     input_6[0][0]                    
+    __________________________________________________________________________________________________
+    model_2 (Model)                 [(None, 1), (None, 4 1219593     model_1[1][0]                    
+    ==================================================================================================
+    Total params: 3,626,220
+    Trainable params: 2,406,627
+    Non-trainable params: 1,219,593
+    __________________________________________________________________________________________________
 
 # Results
 
-Shown here are the results from a training run over 100 epochs. The model "convergence" shows an expected and adequate behavior. The GAN parts (discriminator and generator) are able to learn from each other, continuously improving. Some classes are accurately predicted and generated (e.g. gender), while others are harder (e.g. eye-glasses, 5 o'clock shadow). Initial epochs seem to focus on eyes and face-shape, while no sharp contours are visible yet. Further training initially improves face outline and facial features, followed by face shading and finally backgrounds. Notably the later epochs produce very colorful images. Further training is expected to show some more improvements and robustness, but other adjustments to the model architecture may prove more efficient.
+Shown here are the results from a training run over 25 epochs. The model "convergence" shows an expected and adequate behavior. The GAN parts (discriminator and generator) are able to learn from each other, continuously improving. Some classes are accurately predicted and generated (e.g. gender), while others are harder (e.g. eye-glasses, 5 o'clock shadow). Initial epochs seem to focus on eyes and face-shape, while no sharp contours are visible yet. Further training initially improves face outline and facial features, followed by face shading and finally backgrounds. Notably the later epochs produce very colorful images. Further training is expected to show some more improvements and robustness, but other adjustments to the model architecture may prove more efficient.
 
 ### Loss Curve
 
@@ -241,23 +241,21 @@ Combined with the loss curves, the accuracy/F1 score are a good indicator of mod
 
 ### Auto-Encoder Performance
 
-Epoch 1/5/10/50/100:
+Epoch 1/5/10/25:
 
 ![ae performance epoch 1](img/ae_000.png)\
 ![ae performance epoch 5](img/ae_004.png)\
 ![ae performance epoch 10](img/ae_009.png)\
-![ae performance epoch 50](img/ae_049.png)\
-![ae performance epoch 100](img/ae_099.png)
+![ae performance epoch 50](img/ae_024.png)
 
 ### Generator Performance
 
-Epoch 1/5/10/50/100:
+Epoch 1/5/10/25:
 
 ![gen performance epoch 1](img/gen_000.png)\
 ![gen performance epoch 5](img/gen_004.png)\
 ![gen performance epoch 10](img/gen_009.png)\
-![gen performance epoch 50](img/gen_049.png)\
-![gen performance epoch 100](img/gen_099.png)
+![gen performance epoch 50](img/gen_024.png)
 
 # References
 

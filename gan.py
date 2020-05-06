@@ -227,7 +227,7 @@ class AEACGAN():
 
         ##### BUILD, COMPILE AND RETURN MODEL
         model = Model(inputs = X_in, outputs = X_out)
-        model.compile(loss='mean_absolute_error', optimizer=Adam(lr=self.LEARN_RATE, beta_1=0.5))
+        model.compile(loss='mean_absolute_error', optimizer=Adam(lr=self.LEARN_RATE/4, beta_1=0.5))
         return model
 
     def build_acgan(self, g_model, d_model):
